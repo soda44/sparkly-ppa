@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+</head>
+<body>
+  <h1>FísicaPlay</h1>
+  <h2>Login</h2>
+
+  <p id="erro" style="color:red; display:none;">Usuário ou senha inválidos.</p>
+
+  <label for="usuario">Usuário:</label><br>
+  <input type="text" id="usuario" placeholder="Digite seu usuário"><br><br>
+
+  <label for="senha">Senha:</label><br>
+  <input type="password" id="senha" placeholder="Digite sua senha"><br><br>
+
+  <button onclick="entrar()">Entrar</button>
+
+  <script src="../js/data/mock.js"></script>
+  <script>
+    // Se já está logado, redireciona direto
+    if (sessionStorage.getItem('aluno')) {
+      window.location.href = 'aluno-dashboard.html';
+    }
+
+    function entrar() {
+      const usuario = document.getElementById('usuario').value.trim();
+      const senha   = document.getElementById('senha').value.trim();
+
+      if (!usuario || !senha) {
+        document.getElementById('erro').style.display = 'block';
+        return;
+      }
+
+      // Protótipo: qualquer usuário/senha válidos entram
+      sessionStorage.setItem('aluno', JSON.stringify(ALUNO));
+      window.location.href = 'aluno-dashboard.html';
+    }
+  </script>
+</body>
+</html>
