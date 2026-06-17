@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sparkly — Questões</title>
+  <link rel="stylesheet" href="/static/sparkly.css">
+  <style>
+    main { max-width:960px; margin:0 auto; padding:32px 20px; }
+
+    .filtros { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+    .filtro-btn {
+      background:var(--white); border:2px solid var(--border); color:var(--muted);
+      padding:8px 16px; border-radius:20px; cursor:pointer;
+      font-family:var(--font); font-size:0.8rem; font-weight:800; transition:all .15s;
+      box-shadow: var(--shadow);
+    }
+    .filtro-btn.active,
+    .filtro-btn:hover { border-color:var(--green); color:var(--green); background:var(--green-soft); }
+
+    .questoes-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:16px;
+    }
+    .questao-card {
+      background:var(--white); border:2px solid var(--border);
+      border-bottom:4px solid #d0d0d0;
+      border-radius:var(--radius); padding:20px; cursor:pointer; transition:all .15s;
+    }
+    .questao-card:hover { border-color:var(--green); border-bottom-color:var(--green-dk); transform:translateY(-2px); }
+    .questao-card.respondida { border-color:var(--green-soft); border-bottom-color:var(--green); }
+    .questao-card.respondida:hover { border-color:var(--green); }
+
+    .q-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; gap:8px; }
+    .q-nome   { font-size:.92rem; font-weight:900; line-height:1.3; flex:1; }
+    .q-tipo-row { margin-bottom:10px; }
+    .q-preview {
+      font-size:.78rem; color:var(--muted); font-weight:600; line-height:1.5;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+      margin-bottom:14px;
+    }
+
+    .empty { text-align:center; padding:60px 0; }
+    .empty .em-icon { font-size:3rem; margin-bottom:12px; }
+    .empty .em-text { color:var(--muted); font-size:.9rem; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">Sparkly<span class="dot">.</span></div>
+  <div class="d-flex align-center gap-2">
+    <span id="nomeAluno" class="text-muted" style="font-size:.82rem;font-weight:800;"></span>
+    <a href="/aluno-dashboard" class="btn btn-outline btn-sm">Dashboard</a>
+    <button class="btn btn-ghost btn-sm" onclick="sair()">Sair</button>
+  </div>
+</nav>
+
+<main>
+  <div class="mb-3">
+    <div class="page-title">Questões</div>
+    <div class="page-sub">Escolha uma questão para resolver</div>
+  </div>
+
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="filtrar('todos',this)">Todas</button>
+    <button class="filtro-btn" onclick="filtrar('pendente',this)">Pendentes</button>
+    <button class="filtro-btn" onclick="filtrar('respondida',this)">Respondidas</button>
+    <button class="filtro-btn" onclick="filtrar('multipla_escolha',this)">Múltipla Escolha</button>
+    <button class="filtro-btn" onclick="filtrar('verdadeiro_falso',this)">V/F</button>
+    <button class="filtro-btn" onclick="filtrar('dissertativa',this)">Dissertativa</button>
+  </div>
+
+  <div class="questoes-grid" id="questoesGrid">
+    <div class="empty" style="grid-column:1/-1">
+      <div class="spinner" style="margin:0 auto;"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const alunoStr = sessionStorage.getItem('aluno');
+  if (!alunoStr) window.location.href = '/login';
+  const aluno = JSON.parse(alunoStr);
+  document.getElementById('nomeAluno').textContent = aluno.nome || aluno.usuario;
+
+  const TIPO_LABEL = {
+    multipla_escolha:'Múltipla Escolha','multipla-escolha':'Múltipla Escolha',
+    verdadeiro_falso:'V/F', dissertativa:'Dissertativa', calculo:'Cálculo'
+  };
+  const TIPO_BADGE = {
+    multipla_escolha:'badge-blue','multipla-escolha':'badge-blue',
+    verdadeiro_falso:'badge-purple', dissertativa:'badge-neutral', calculo:'badge-green'
+  };
+
+  let todasQuestoes = [];
+
+  async function carregar() {
+    try {
+      const r = await fetch('/api/aluno/questoes');
+      const data = await r.json();
+      if (!data.sucesso) throw new Error(data.erro);
+      todasQuestoes = data.questoes;
+      renderizar(todasQuestoes);
+    } catch(e) {
+      document.getElementById('questoesGrid').innerHTML =
+        `<div class="empty" style="grid-column:1/-1"><div class="em-icon"></div><div class="em-text">Erro: ${e.message}</div></div>`;
+    }
+  }
+
+  function filtrar(tipo, btn) {
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    let lista = todasQuestoes;
+    if (tipo==='pendente')   lista = todasQuestoes.filter(q => !q.ja_respondida);
+    else if (tipo==='respondida') lista = todasQuestoes.filter(q => q.ja_respondida);
+    else if (tipo!=='todos') lista = todasQuestoes.filter(q => q.tipo===tipo||q.tipo===tipo.replace('_','-'));
+    renderizar(lista);
+  }
+
+  function renderizar(questoes) {
+    const grid = document.getElementById('questoesGrid');
+    if (!questoes.length) {
+      grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="em-icon"></div><div class="em-text">Nenhuma questão encontrada</div></div>`;
+      return;
+    }
+    grid.innerHTML = questoes.map(q => `
+      <div class="questao-card ${q.ja_respondida?'respondida':''}" onclick="abrirQuestao(${q.id})">
+        <div class="q-header">
+          <div class="q-nome">${q.nome}</div>
+          <span class="badge ${q.ja_respondida?'badge-green':'badge-yellow'}">
+            ${q.ja_respondida?'✓ Feita':'Nova'}
+          </span>
+        </div>
+        <div class="q-tipo-row">
+          <span class="badge ${TIPO_BADGE[q.tipo]||'badge-neutral'}">${TIPO_LABEL[q.tipo]||q.tipo}</span>
+        </div>
+        <div class="q-preview">${q.conteudo.enunciado||''}</div>
+        <button class="btn ${q.ja_respondida?'btn-outline':'btn-primary'} btn-sm btn-full">
+          ${q.ja_respondida?'Refazer':'Resolver →'}
+        </button>
+      </div>`).join('');
+  }
+
+  function abrirQuestao(id) { window.location.href=`/aluno-desafio?questao=${id}`; }
+  function sair() { sessionStorage.clear(); window.location.href='/login'; }
+  carregar();
+</script>
+</body>
+</html>

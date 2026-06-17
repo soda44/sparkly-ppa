@@ -4,7 +4,9 @@ const ALUNO = {
   xp: 340,
   xpProximoNivel: 500,
   acertos: 18,
-  erros: 5
+  erros: 5,
+  usuario: "maria",
+  senha: 123
 };
 
 const MODULOS = [
@@ -40,3 +42,5 @@ const QUESTOES = {
     }
   ]
 };
+
+

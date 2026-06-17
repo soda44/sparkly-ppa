@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sparkly — Login</title>
+  <link rel="stylesheet" href="/static/sparkly.css">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .wrap { width:100%; max-width:400px; padding:24px; }
+    .logo-big { font-size:2.4rem; font-weight:900; color:var(--green); text-align:center; margin-bottom:4px; }
+    .tagline  { text-align:center; color:var(--muted); font-size:0.9rem; font-weight:600; margin-bottom:32px; }
+    .tabs { display:flex; gap:4px; margin-bottom:24px; background:#f0f0f0; border-radius:var(--radius-sm); padding:4px; }
+    .tab {
+      flex:1; text-align:center; padding:10px;
+      border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:800;
+      color:var(--muted); transition:all .15s; border:none; background:transparent; font-family:var(--font);
+    }
+    .tab.active { background:var(--white); color:var(--green); box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    .painel { display:none; } .painel.active { display:block; }
+    .erro { display:none; margin-bottom:14px; }
+    .owl { text-align:center; font-size:2.5rem; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="owl">🐝</div>
+  <div class="logo-big">Sparkly</div>
+  <div class="tagline">Aprenda mais, avance mais!</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="trocarTab('aluno',this)">Aluno</button>
+    <button class="tab"        onclick="trocarTab('professor',this)">Professor</button>
+  </div>
+
+  <!-- ALUNO -->
+  <div class="painel active" id="painelAluno">
+    <div class="alert alert-danger erro" id="erroAluno"></div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" class="input" id="alunoUsuario" placeholder="seu_usuario">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" class="input" id="alunoSenha" placeholder="••••••">
+    </div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="loginAluno()">Entrar</button>
+    <p class="text-center text-muted mt-2" style="font-size:0.82rem;font-weight:600;">
+      Não tem conta? <a href="/cadastro">Cadastre-se grátis</a>
+    </p>
+  </div>
+
+  <!-- PROFESSOR -->
+  <div class="painel" id="painelProfessor">
+    <div class="alert alert-danger erro" id="erroProfessor"></div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" class="input" id="profUsuario" placeholder="prof_usuario">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" class="input" id="profSenha" placeholder="••••••">
+    </div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="loginProf()">Entrar como Professor</button>
+  </div>
+</div>
+
+<script>
+  function trocarTab(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.painel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('painel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  }
+
+  async function loginAluno() {
+    const usuario = document.getElementById('alunoUsuario').value.trim();
+    const senha   = document.getElementById('alunoSenha').value.trim();
+    const erroEl  = document.getElementById('erroAluno');
+    erroEl.style.display = 'none';
+    try {
+      const r = await fetch('/api/login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ usuario, senha })
+      });
+      const data = await r.json();
+      if (!data.sucesso) throw new Error(data.erro);
+      sessionStorage.setItem('aluno', JSON.stringify(data.dados || data));
+      sessionStorage.setItem('aluno_id', data.aluno_id);
+      window.location.href = '/aluno-dashboard';
+    } catch(e) { erroEl.textContent = e.message; erroEl.style.display = 'block'; }
+  }
+
+  async function loginProf() {
+    const usuario = document.getElementById('profUsuario').value.trim();
+    const senha   = document.getElementById('profSenha').value.trim();
+    const erroEl  = document.getElementById('erroProfessor');
+    erroEl.style.display = 'none';
+    try {
+      const r = await fetch('/api/professor/login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ usuario, senha })
+      });
+      const data = await r.json();
+      if (!data.sucesso) throw new Error(data.erro);
+      sessionStorage.setItem('professor', JSON.stringify(data.dados));
+      window.location.href = '/professor-dashboard';
+    } catch(e) { erroEl.textContent = e.message; erroEl.style.display = 'block'; }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const tab = document.querySelector('.tab.active').textContent.toLowerCase();
+    if (tab === 'aluno') loginAluno(); else loginProf();
+  });
+</script>
+</body>
+</html>

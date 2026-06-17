@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sparkly</title>
+  <link rel="stylesheet" href="/static/sparkly.css">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--white); }
+    .hero { text-align:center; max-width:440px; padding:24px; }
+    .hero-owl { font-size:5rem; margin-bottom:12px; animation: bounce 2s infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .hero h1 { font-size:2.8rem; font-weight:900; color:var(--green); margin-bottom:8px; }
+    .hero p  { color:var(--muted); font-size:1rem; font-weight:600; margin-bottom:32px; }
+    .hero-btns { display:flex; flex-direction:column; gap:12px; }
+  </style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-owl">🐝</div>
+  <h1>Sparkly</h1>
+  <p>Aprenda física de um jeito divertido!</p>
+  <div class="hero-btns">
+    <a href="/cadastro" class="btn btn-primary btn-lg btn-full">Começar agora</a>
+    <a href="/login"    class="btn btn-outline btn-lg btn-full">Já tenho conta</a>
+  </div>
+</div>
+</body>
+</html>
