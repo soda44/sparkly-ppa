@@ -1,25 +1,30 @@
-import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
+from app.config import Config
 
-# Chave secreta para sessions
-app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
-# Configuração do banco de dados
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    f"mysql+mysqlconnector://"
-    f"{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@"
-    f"{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/"
-    f"{os.getenv('MYSQL_DATABASE')}"
-)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config())
 
-from app.models import db
-db.init_app(app)
+    from app.models import db
+    db.init_app(app)
 
-from app import routes
+    with app.app_context():
+        db.create_all()
+
+    from app.routes import register_routes
+    register_routes(app)
+
+    from app.seed import seed_questoes
+
+    @app.cli.command('seed')
+    def seed_command():
+        """Insere as questões iniciais de Física no banco."""
+        inseridas = seed_questoes()
+        print(f'Questões inseridas agora: {inseridas}')
+
+    return app
