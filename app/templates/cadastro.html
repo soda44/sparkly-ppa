@@ -5,15 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sparkly — Cadastro</title>
   <link rel="stylesheet" href="/static/sparkly.css">
-  <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
-    .wrap { width:100%; max-width:420px; padding:24px; }
-    .logo-big { font-size:2rem; font-weight:900; color:var(--green); text-align:center; margin-bottom:4px; }
-    .tagline  { text-align:center; color:var(--muted); font-size:0.85rem; font-weight:600; margin-bottom:28px; }
-    .owl { text-align:center; font-size:2.2rem; margin-bottom:8px; }
-    .progress-bar { height:8px; background:var(--border); border-radius:20px; margin-bottom:24px; overflow:hidden; }
-    .progress-fill { height:100%; background:var(--green); border-radius:20px; width:0%; transition:width .4s; }
-  </style>
+  <link rel="stylesheet" href="/static/css/cadastro.css">
 </head>
 <body>
 <div class="wrap">
@@ -52,42 +44,6 @@
     Já tem conta? <a href="/login">Fazer login</a>
   </p>
 </div>
-
-<script>
-  function atualizarBarra() {
-    const campos = ['nome','email','usuarioNovo','senhaNova','senhaConfirmar'];
-    const preenchidos = campos.filter(id => document.getElementById(id).value.trim() !== '').length;
-    document.getElementById('progress').style.width = (preenchidos / campos.length * 100) + '%';
-  }
-
-  async function realizarCadastro() {
-    const nome     = document.getElementById('nome').value.trim();
-    const email    = document.getElementById('email').value.trim();
-    const usuario  = document.getElementById('usuarioNovo').value.trim();
-    const senha    = document.getElementById('senhaNova').value.trim();
-    const senhaConf= document.getElementById('senhaConfirmar').value.trim();
-    const erroMsg  = document.getElementById('erroMsg');
-    const succMsg  = document.getElementById('sucessoMsg');
-    erroMsg.style.display = 'none'; succMsg.style.display = 'none';
-
-    if (!nome||!email||!usuario||!senha) { erroMsg.textContent='Todos os campos são obrigatórios.'; erroMsg.style.display='block'; return; }
-    if (senha !== senhaConf) { erroMsg.textContent='As senhas não conferem.'; erroMsg.style.display='block'; return; }
-    if (senha.length < 3) { erroMsg.textContent='A senha deve ter pelo menos 3 caracteres.'; erroMsg.style.display='block'; return; }
-
-    try {
-      const r = await fetch('/api/cadastro', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ nome, email, usuario, senha })
-      });
-      const dados = await r.json();
-      if (!r.ok) { erroMsg.textContent = dados.erro||'Erro ao cadastrar.'; erroMsg.style.display='block'; return; }
-      succMsg.textContent = 'Conta criada! Redirecionando...';
-      succMsg.style.display = 'block';
-      setTimeout(() => window.location.href = '/login', 2000);
-    } catch(e) { erroMsg.textContent = 'Erro na conexão.'; erroMsg.style.display='block'; }
-  }
-
-  document.addEventListener('keydown', e => { if(e.key==='Enter') realizarCadastro(); });
-</script>
+  <script src="/static/js/cadastro.js"></script>
 </body>
 </html>

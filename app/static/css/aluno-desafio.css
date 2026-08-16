@@ -1,0 +1,42 @@
+    body { display:flex; flex-direction:column; }
+
+    #telaLoading {
+      flex:1; display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:16px; color:var(--muted); font-size:.9rem; font-weight:700;
+    }
+
+    #telaQuestao {
+      flex:1; display:none; align-items:center; justify-content:center; padding:32px 20px;
+    }
+    .questao-wrap { width:100%; max-width:640px; }
+
+    .q-meta { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+
+    .q-nome {
+      font-size:1.4rem; font-weight:900; margin-bottom:14px; line-height:1.3;
+    }
+
+    .alternativas { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+
+    .acoes { display:flex; gap:12px; }
+    .btn-confirmar { flex:1; }
+
+    #telaResultado {
+      flex:1; display:none; align-items:center; justify-content:center; padding:32px 20px;
+    }
+    .resultado-wrap { text-align:center; max-width:440px; }
+    .resultado-emoji { font-size:5rem; margin-bottom:16px; animation:bounce .6s ease; }
+    @keyframes bounce { 0%{transform:scale(.5)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+    .resultado-titulo { font-size:2rem; font-weight:900; margin-bottom:8px; }
+    .resultado-titulo.correto   { color:var(--green); }
+    .resultado-titulo.incorreto { color:var(--red); }
+    .resultado-sub { color:var(--muted); font-size:.9rem; font-weight:600; margin-bottom:32px; line-height:1.6; }
+
+    .resultado-barra {
+      background:var(--border); border-radius:20px; height:16px; margin-bottom:8px; overflow:hidden;
+    }
+    .resultado-barra-fill { height:100%; border-radius:20px; transition:width 1s ease; }
+    .resultado-barra-label { font-size:.75rem; font-weight:800; color:var(--muted); margin-bottom:24px; }
+
+    .resultado-acoes { display:flex; flex-direction:column; gap:10px; }
+  
