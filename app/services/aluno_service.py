@@ -28,7 +28,7 @@ def obter_dados_aluno(aluno_id):
     }
 
 
-def cadastrar_aluno(nome, email, usuario, senha):
+def cadastrar_aluno(nome, email, usuario, senha, genero='Prefiro não dizer', nome_social=None):
     """Cria um aluno. Retorna (aluno, erro, codigo)."""
     if Aluno.query.filter_by(usuario=usuario).first():
         return None, 'Usuário já existe', 409
@@ -41,7 +41,9 @@ def cadastrar_aluno(nome, email, usuario, senha):
             nome_completo=nome,
             email=email,
             usuario=usuario,
-            senha=generate_password_hash(senha)
+            senha=generate_password_hash(senha),
+            genero=genero,
+            nome_social=nome_social,
         )
         db.session.add(aluno)
         db.session.commit()

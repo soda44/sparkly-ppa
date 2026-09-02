@@ -5,4 +5,21 @@
     .owl { text-align:center; font-size:2.2rem; margin-bottom:8px; }
     .progress-bar { height:8px; background:var(--border); border-radius:20px; margin-bottom:24px; overflow:hidden; }
     .progress-fill { height:100%; background:var(--green); border-radius:20px; width:0%; transition:width .4s; }
+
+    .toggle-group { display:flex; gap:8px; }
+    .toggle-btn {
+      flex:1; padding:10px 16px; border-radius:var(--radius-sm);
+      border:2px solid var(--border); background:var(--white);
+      font-family:var(--font); font-size:0.9rem; font-weight:700;
+      color:var(--muted); cursor:pointer; transition:all .12s;
+    }
+    .toggle-btn.selecionado { border-color:var(--green); background:var(--green-soft); color:var(--green-dk); }
+
+    .radio-group { display:flex; flex-direction:column; gap:10px; }
+    .radio-option {
+      display:flex; align-items:center; gap:10px;
+      text-transform:none; letter-spacing:0; font-size:0.9rem;
+      font-weight:600; color:var(--text); cursor:pointer;
+    }
+    .radio-option input[type="radio"] { width:18px; height:18px; accent-color:var(--green); cursor:pointer; }
   

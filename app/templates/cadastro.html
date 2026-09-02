@@ -39,6 +39,33 @@
     <input type="password" class="input" id="senhaConfirmar" placeholder="Repita a senha" oninput="atualizarBarra()">
   </div>
 
+  <div class="form-group">
+    <label>Utiliza nome social?</label>
+    <div class="toggle-group">
+      <button type="button" class="toggle-btn" id="btnNomeSocialSim" onclick="definirUsaNomeSocial(true)">Sim</button>
+      <button type="button" class="toggle-btn selecionado" id="btnNomeSocialNao" onclick="definirUsaNomeSocial(false)">Não</button>
+    </div>
+  </div>
+  <div class="form-group" id="grupoNomeSocial" style="display:none;">
+    <label>Nome Social</label>
+    <input type="text" class="input" id="nomeSocial" placeholder="Como você gostaria de ser chamado(a)" oninput="atualizarBarra()">
+  </div>
+
+  <div class="form-group">
+    <label>Gênero</label>
+    <div class="radio-group">
+      <label class="radio-option"><input type="radio" name="genero" value="masculino" onchange="atualizarGenero()"> Masculino</label>
+      <label class="radio-option"><input type="radio" name="genero" value="feminino" onchange="atualizarGenero()"> Feminino</label>
+      <label class="radio-option"><input type="radio" name="genero" value="nao-binario" onchange="atualizarGenero()"> Não-binário</label>
+      <label class="radio-option"><input type="radio" name="genero" value="prefiro-nao-dizer" onchange="atualizarGenero()"> Prefiro não dizer</label>
+      <label class="radio-option"><input type="radio" name="genero" value="personalizado" onchange="atualizarGenero()"> Adicionar gênero personalizado</label>
+    </div>
+  </div>
+  <div class="form-group" id="grupoGeneroPersonalizado" style="display:none;">
+    <label>Gênero Personalizado</label>
+    <input type="text" class="input" id="generoPersonalizado" placeholder="Informe seu gênero" oninput="atualizarBarra()">
+  </div>
+
   <button class="btn btn-primary btn-full btn-lg mt-2" onclick="realizarCadastro()">Criar conta</button>
   <p class="text-center text-muted mt-2" style="font-size:0.82rem;font-weight:600;">
     Já tem conta? <a href="/login">Fazer login</a>
