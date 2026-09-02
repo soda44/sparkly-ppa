@@ -8,7 +8,8 @@ def _criar_aluno(usuario='maria', senha='segredo'):
         nome_completo='Maria',
         email=f'{usuario}@teste.com',
         usuario=usuario,
-        senha=generate_password_hash(senha)
+        senha=generate_password_hash(senha),
+        genero='Feminino'
     )
     db.session.add(aluno)
     db.session.commit()
@@ -36,7 +37,8 @@ def test_validar_login_senha_legada_migra_para_hash(ctx):
         nome_completo='Legado',
         email='legado@teste.com',
         usuario='legado',
-        senha='textopuro'
+        senha='textopuro',
+        genero='Prefiro não dizer'
     ))
     db.session.commit()
 

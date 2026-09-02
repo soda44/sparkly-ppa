@@ -3,6 +3,13 @@ from app.services import auth_service, aluno_service, questao_service
 
 aluno_bp = Blueprint('aluno', __name__)
 
+GENEROS_VALIDOS = {
+    'masculino': 'Masculino',
+    'feminino': 'Feminino',
+    'nao-binario': 'Não-binário',
+    'prefiro-nao-dizer': 'Prefiro não dizer',
+}
+
 
 @aluno_bp.route('/login', methods=['POST'])
 def login():
@@ -43,11 +50,32 @@ def cadastro():
     if not dados or not all([dados.get('usuario'), dados.get('senha'), dados.get('email'), dados.get('nome')]):
         return jsonify({'sucesso': False, 'erro': 'Todos os campos são obrigatórios'}), 400
 
+    genero_opcao = (dados.get('genero') or '').strip()
+    if not genero_opcao:
+        return jsonify({'sucesso': False, 'erro': 'Selecione um gênero'}), 400
+
+    if genero_opcao == 'personalizado':
+        genero = (dados.get('generoPersonalizado') or '').strip()
+        if not genero:
+            return jsonify({'sucesso': False, 'erro': 'Informe o gênero personalizado'}), 400
+    elif genero_opcao in GENEROS_VALIDOS:
+        genero = GENEROS_VALIDOS[genero_opcao]
+    else:
+        return jsonify({'sucesso': False, 'erro': 'Gênero inválido'}), 400
+
+    nome_social = None
+    if dados.get('usaNomeSocial'):
+        nome_social = (dados.get('nomeSocial') or '').strip()
+        if not nome_social:
+            return jsonify({'sucesso': False, 'erro': 'Informe o nome social'}), 400
+
     aluno, erro, codigo = aluno_service.cadastrar_aluno(
         nome=dados['nome'].strip(),
         email=dados['email'].strip(),
         usuario=dados['usuario'].strip(),
         senha=dados['senha'].strip(),
+        genero=genero,
+        nome_social=nome_social,
     )
     if erro:
         return jsonify({'sucesso': False, 'erro': erro}), codigo

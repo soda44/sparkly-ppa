@@ -6,6 +6,8 @@ class Aluno(db.Model):
 
     id_aluno = db.Column(db.Integer, primary_key=True)
     nome_completo = db.Column(db.String(150), nullable=False)
+    nome_social = db.Column(db.String(150))
+    genero = db.Column(db.String(60), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     usuario = db.Column(db.String(50), unique=True, nullable=False)
     senha = db.Column(db.String(255), nullable=False)
@@ -18,5 +20,7 @@ class Aluno(db.Model):
             'id': self.id_aluno,
             'nome': self.nome_completo,
             'email': self.email,
-            'usuario': self.usuario
+            'usuario': self.usuario,
+            'nomeSocial': self.nome_social,
+            'genero': self.genero
         }
