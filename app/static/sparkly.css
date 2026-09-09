@@ -348,6 +348,80 @@ select.input {
 .xp-bar-wrap { background: var(--border); border-radius: 20px; height: 12px; overflow: hidden; }
 .xp-bar      { background: var(--green);  border-radius: 20px; height: 100%; transition: width .4s ease; }
 
+/* ─── Gamificação: navbar (corações/pontos) ─── */
+.nav-center {
+  display: flex; align-items: center; gap: 4px;
+}
+.nav-link {
+  font-size: 0.8rem; font-weight: 800; color: var(--muted);
+  text-decoration: none; padding: 8px 12px; border-radius: var(--radius-sm);
+  transition: color .15s, background .15s;
+}
+.nav-link:hover, .nav-link.active { color: var(--green); background: var(--green-soft); }
+
+.gami-nav { display: flex; align-items: center; gap: 8px; }
+.gami-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--white); border: 2px solid var(--border);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 0.82rem; font-weight: 900; text-decoration: none;
+  transition: border-color .15s;
+}
+.gami-badge:hover { border-color: var(--green); }
+.gami-badge.gami-sparks { color: var(--purple); }
+.gami-badge.gami-sparks:hover { border-color: var(--purple); }
+.gami-badge.gami-vazio,
+.gami-badge.gami-badge-vazio { border-color: var(--red); color: var(--red); animation: gamiPulso 1.2s ease-in-out infinite; }
+@keyframes gamiPulso { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+@media (max-width: 900px) {
+  .nav-center { display: none; }
+}
+
+/* ─── Gamificação: cartões de missão ─── */
+.missao-card {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--white); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+}
+.missao-card.concluida { border-color: var(--green-soft); background: var(--green-soft); }
+.missao-icone { font-size: 1.8rem; flex-shrink: 0; }
+.missao-info { flex: 1; }
+.missao-titulo { font-size: 0.95rem; font-weight: 900; margin-bottom: 8px; }
+.missao-legenda { font-size: 0.72rem; font-weight: 800; color: var(--muted); margin-top: 6px; }
+
+/* ─── Gamificação: ranking ─── */
+.ranking-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: var(--radius);
+  border: 2px solid transparent;
+}
+.ranking-item:hover { background: var(--bg); }
+.ranking-item.voce { border-color: var(--green); background: var(--green-soft); }
+.ranking-posicao { font-weight: 900; color: var(--muted); width: 28px; text-align: center; flex-shrink: 0; }
+.ranking-posicao.top1 { color: var(--yellow-dk); font-size: 1.1rem; }
+.ranking-posicao.top2 { color: #999; font-size: 1.05rem; }
+.ranking-posicao.top3 { color: #b5651d; font-size: 1.05rem; }
+.ranking-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 1rem; flex-shrink: 0;
+}
+.ranking-nome { flex: 1; font-weight: 800; }
+.ranking-pontos { color: var(--muted); font-weight: 800; font-size: 0.85rem; }
+
+/* ─── Gamificação: loja ─── */
+.loja-item {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--white); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.loja-icone { font-size: 2.4rem; flex-shrink: 0; }
+.loja-info { flex: 1; }
+.loja-titulo { font-size: 1rem; font-weight: 900; margin-bottom: 4px; }
+.loja-desc { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+
 /* ─── Utilitários ─── */
 .text-muted    { color: var(--muted); }
 .text-green    { color: var(--green); }

@@ -21,6 +21,8 @@
     .questao-card:hover { border-color:var(--green); border-bottom-color:var(--green-dk); transform:translateY(-2px); }
     .questao-card.respondida { border-color:var(--green-soft); border-bottom-color:var(--green); }
     .questao-card.respondida:hover { border-color:var(--green); }
+    .questao-card.bloqueada { cursor:default; opacity:.6; filter:grayscale(.4); }
+    .questao-card.bloqueada:hover { transform:none; border-color:var(--border); border-bottom-color:#d0d0d0; }
 
     .q-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; gap:8px; }
     .q-nome   { font-size:.92rem; font-weight:900; line-height:1.3; flex:1; }
@@ -35,3 +37,42 @@
     .empty .em-icon { font-size:3rem; margin-bottom:12px; }
     .empty .em-text { color:var(--muted); font-size:.9rem; font-weight:600; }
   
+
+    /* ── Trilha (Módulo → Lição), estilo Duolingo ─────────────────── */
+    .trilha { display:flex; flex-direction:column; gap:28px; }
+
+    .modulo-bloco {
+      background:var(--white); border:2px solid var(--border);
+      border-radius:var(--radius); padding:20px 22px; box-shadow:var(--shadow);
+    }
+    .modulo-bloco.modulo-completo { border-color:var(--green-soft); }
+
+    .modulo-header {
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:12px; margin-bottom:16px; flex-wrap:wrap;
+    }
+    .modulo-nome { font-size:1.05rem; font-weight:900; }
+    .modulo-desc { font-size:.8rem; color:var(--muted); font-weight:600; margin-top:2px; }
+
+    .licoes-caminho { display:flex; flex-direction:column; gap:10px; }
+
+    .licao-no {
+      display:flex; align-items:center; gap:14px;
+      border:2px solid var(--border); border-bottom:4px solid #d0d0d0;
+      border-radius:var(--radius-sm); padding:14px 16px; transition:all .15s;
+    }
+    .licao-no.licao-disponivel { cursor:pointer; }
+    .licao-no.licao-disponivel:hover { border-color:var(--green); border-bottom-color:var(--green-dk); transform:translateY(-2px); }
+    .licao-no.licao-completa { cursor:pointer; border-color:var(--green-soft); border-bottom-color:var(--green); }
+    .licao-no.licao-bloqueada { opacity:.55; filter:grayscale(.5); }
+
+    .licao-icone {
+      width:38px; height:38px; min-width:38px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:900; font-size:1rem; background:var(--green-soft); color:var(--green-dk);
+    }
+    .licao-bloqueada .licao-icone { background:#eee; color:#999; }
+
+    .licao-info { flex:1; min-width:0; }
+    .licao-nome { font-size:.9rem; font-weight:900; }
+    .licao-progresso { font-size:.75rem; color:var(--muted); font-weight:700; }

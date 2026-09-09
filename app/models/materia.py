@@ -9,7 +9,10 @@ class Materia(db.Model):
     numero_sala = db.Column(db.String(20))
     id_professor = db.Column(db.Integer, db.ForeignKey('professor.id_professor'))
 
-    licoes = db.relationship('Licao', backref='materia', lazy=True)
+    modulos = db.relationship(
+        'Modulo', backref='materia', lazy=True,
+        order_by='Modulo.ordem', cascade='all, delete-orphan'
+    )
 
     def __repr__(self):
         return f'<Materia {self.nome_materia}>'

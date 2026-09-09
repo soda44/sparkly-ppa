@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sparkly — Loja</title>
+  <link rel="stylesheet" href="/static/sparkly.css">
+  <link rel="stylesheet" href="/static/css/aluno-loja.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">Sparkly<span class="dot">.</span></div>
+  <div class="nav-center">
+    <a href="/aluno-dashboard" class="nav-link">Início</a>
+    <a href="/aluno-trilhas" class="nav-link">Questões</a>
+    <a href="/aluno-missoes" class="nav-link">Missões</a>
+    <a href="/aluno-ranking" class="nav-link">Ranking</a>
+    <a href="/aluno-loja" class="nav-link active">Loja</a>
+  </div>
+  <div class="d-flex align-center gap-2">
+    <div class="gami-nav">
+      <a href="/aluno-loja" class="gami-badge gami-coracoes" id="navCoracoes">❤️ —</a>
+      <a href="/aluno-loja" class="gami-badge gami-pontos" id="navPontos">⭐ —</a>
+      <a href="/aluno-loja" class="gami-badge gami-sparks" id="navSparks">⚡ —</a>
+    </div>
+    <span id="nomeAluno" class="text-muted" style="font-size:.82rem;font-weight:800;"></span>
+    <button class="btn btn-ghost btn-sm" onclick="sair()">Sair</button>
+  </div>
+</nav>
+
+<main>
+  <div class="loja-header">
+    <div class="loja-icone-header">🛒</div>
+    <div class="page-title">Loja</div>
+    <div class="page-sub">Use seus Sparks para recarregar corações e continuar praticando</div>
+  </div>
+
+  <div class="alert alert-danger" id="erroBox" style="display:none;margin-bottom:16px;"></div>
+  <div class="alert alert-success" id="sucessoBox" style="display:none;margin-bottom:16px;"></div>
+
+  <div class="loja-item">
+    <div class="loja-icone">❤️</div>
+    <div class="loja-info">
+      <div class="loja-titulo">Recarregar corações</div>
+      <div class="loja-desc" id="lojaDescCoracoes">Recupere todos os seus corações instantaneamente.</div>
+    </div>
+    <button class="btn btn-primary" id="btnRecarregar" onclick="recarregar()" disabled>
+      <span id="btnRecarregarTexto">⚡ —</span>
+    </button>
+  </div>
+
+  <div class="section-header mt-3">
+    <div class="section-title">Seu Pet</div>
+  </div>
+
+  <div class="pet-card">
+    <div class="pet-preview">
+      <div class="pet-bicho" id="petBicho">
+        <div class="pet-olho pet-olho-esq"></div>
+        <div class="pet-olho pet-olho-dir"></div>
+        <div class="pet-bochecha pet-bochecha-esq"></div>
+        <div class="pet-bochecha pet-bochecha-dir"></div>
+      </div>
+      <div class="pet-nome" id="petNomeExibicao">—</div>
+      <div class="pet-nivel-badge" id="petNivelBadge">Nível —</div>
+      <div class="pet-xp-info">
+        <div class="xp-bar-wrap"><div class="xp-bar" id="petXpBarra" style="width:0%"></div></div>
+        <div class="pet-xp-label" id="petXpLabel"></div>
+      </div>
+    </div>
+
+    <div class="pet-nome-form">
+      <label for="petNomeInput">Nome do seu pet</label>
+      <div class="d-flex gap-1">
+        <input type="text" id="petNomeInput" maxlength="20" placeholder="Dê um nome ao seu pet">
+        <button class="btn btn-outline btn-sm" id="btnSalvarNome" onclick="salvarNomePet()">Salvar</button>
+      </div>
+    </div>
+
+    <div class="pet-cores-titulo">Cores disponíveis na loja</div>
+    <div class="pet-cores-grid" id="petCoresGrid"></div>
+  </div>
+</main>
+  <script src="/static/js/gamificacao.js"></script>
+  <script src="/static/js/aluno-loja.js"></script>
+</body>
+</html>

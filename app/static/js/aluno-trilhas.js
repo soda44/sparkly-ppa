@@ -1,66 +1,88 @@
   const alunoStr = sessionStorage.getItem('aluno');
   if (!alunoStr) window.location.href = '/login';
   const aluno = JSON.parse(alunoStr);
-  document.getElementById('nomeAluno').textContent = aluno.nome || aluno.usuario;
-
-  const TIPO_LABEL = {
-    multipla_escolha:'Múltipla Escolha','multipla-escolha':'Múltipla Escolha',
-    verdadeiro_falso:'V/F', dissertativa:'Dissertativa', calculo:'Cálculo'
-  };
-  const TIPO_BADGE = {
-    multipla_escolha:'badge-blue','multipla-escolha':'badge-blue',
-    verdadeiro_falso:'badge-purple', dissertativa:'badge-neutral', calculo:'badge-green'
-  };
-
-  let todasQuestoes = [];
+  const alunoInfo = aluno.aluno || aluno;
+  document.getElementById('nomeAluno').textContent = alunoInfo.nome || alunoInfo.usuario;
 
   async function carregar() {
+    const trilha = document.getElementById('trilha');
     try {
-      const r = await fetch('/api/aluno/questoes');
-      const data = await r.json();
+      const [rm, ra] = await Promise.all([
+        fetch('/api/aluno/modulos'),
+        fetch('/api/aluno')
+      ]);
+      const data = await rm.json();
+      const dadosAluno = await ra.json();
       if (!data.sucesso) throw new Error(data.erro);
-      todasQuestoes = data.questoes;
-      renderizar(todasQuestoes);
-    } catch(e) {
-      document.getElementById('questoesGrid').innerHTML =
-        `<div class="empty" style="grid-column:1/-1"><div class="em-icon"></div><div class="em-text">Erro: ${e.message}</div></div>`;
+      if (dadosAluno.sucesso) salvarGamificacaoNaSessao(dadosAluno.dados.aluno);
+      renderizar(data.modulos);
+    } catch (e) {
+      trilha.innerHTML =
+        `<div class="empty"><div class="em-icon"></div><div class="em-text">Erro: ${e.message}</div></div>`;
     }
   }
 
-  function filtrar(tipo, btn) {
-    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    let lista = todasQuestoes;
-    if (tipo==='pendente')   lista = todasQuestoes.filter(q => !q.ja_respondida);
-    else if (tipo==='respondida') lista = todasQuestoes.filter(q => q.ja_respondida);
-    else if (tipo!=='todos') lista = todasQuestoes.filter(q => q.tipo===tipo||q.tipo===tipo.replace('_','-'));
-    renderizar(lista);
-  }
-
-  function renderizar(questoes) {
-    const grid = document.getElementById('questoesGrid');
-    if (!questoes.length) {
-      grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="em-icon"></div><div class="em-text">Nenhuma questão encontrada</div></div>`;
+  function renderizar(modulos) {
+    const trilha = document.getElementById('trilha');
+    if (!modulos.length) {
+      trilha.innerHTML = `<div class="empty"><div class="em-icon"></div><div class="em-text">Nenhum módulo cadastrado ainda</div></div>`;
       return;
     }
-    grid.innerHTML = questoes.map(q => `
-      <div class="questao-card ${q.ja_respondida?'respondida':''}" onclick="abrirQuestao(${q.id})">
-        <div class="q-header">
-          <div class="q-nome">${q.nome}</div>
-          <span class="badge ${q.ja_respondida?'badge-green':'badge-yellow'}">
-            ${q.ja_respondida?'✓ Feita':'Nova'}
+
+    trilha.innerHTML = modulos.map(modulo => `
+      <section class="modulo-bloco ${modulo.completo ? 'modulo-completo' : ''}">
+        <div class="modulo-header">
+          <div>
+            <div class="modulo-nome">${modulo.nome}</div>
+            ${modulo.descricao ? `<div class="modulo-desc">${modulo.descricao}</div>` : ''}
+          </div>
+          <span class="badge ${modulo.completo ? 'badge-green' : 'badge-blue'}">
+            ${modulo.licoes_completas}/${modulo.total_licoes} lições
           </span>
         </div>
-        <div class="q-tipo-row">
-          <span class="badge ${TIPO_BADGE[q.tipo]||'badge-neutral'}">${TIPO_LABEL[q.tipo]||q.tipo}</span>
+        <div class="licoes-caminho">
+          ${modulo.licoes.map(licao => renderLicao(licao)).join('')}
         </div>
-        <div class="q-preview">${q.conteudo.enunciado||''}</div>
-        <button class="btn ${q.ja_respondida?'btn-outline':'btn-primary'} btn-sm btn-full">
-          ${q.ja_respondida?'Refazer':'Resolver →'}
-        </button>
-      </div>`).join('');
+      </section>`).join('');
   }
 
-  function abrirQuestao(id) { window.location.href=`/aluno-desafio?questao=${id}`; }
-  function sair() { sessionStorage.clear(); window.location.href='/login'; }
+  function renderLicao(licao) {
+    let estadoClasse = 'licao-bloqueada';
+    let icone = '🔒';
+    if (licao.completa) { estadoClasse = 'licao-completa'; icone = '✓'; }
+    else if (licao.desbloqueada) { estadoClasse = 'licao-disponivel'; icone = '▶'; }
+
+    const clickable = licao.desbloqueada ? `onclick="abrirLicao(${licao.id})"` : '';
+
+    return `
+      <div class="licao-no ${estadoClasse}" ${clickable}>
+        <div class="licao-icone">${icone}</div>
+        <div class="licao-info">
+          <div class="licao-nome">${licao.nome}</div>
+          <div class="licao-progresso">${licao.questoes_concluidas}/${licao.total_questoes} questões</div>
+        </div>
+        ${licao.desbloqueada
+          ? `<button class="btn ${licao.completa ? 'btn-outline' : 'btn-primary'} btn-sm">${licao.completa ? 'Praticar' : 'Continuar →'}</button>`
+          : `<span class="text-muted" style="font-size:.72rem;font-weight:700;">Bloqueada</span>`}
+      </div>`;
+  }
+
+  async function abrirLicao(licaoId) {
+    try {
+      const r = await fetch(`/api/aluno/licoes/${licaoId}/questoes`);
+      const data = await r.json();
+      if (!data.sucesso) throw new Error(data.erro);
+      if (!data.questoes.length) { alert('Esta lição ainda não tem questões.'); return; }
+
+      // Guarda a fila de questões da lição para o desafio navegar em sequência.
+      const pendentes = data.questoes.filter(q => !q.ja_concluida);
+      const fila = (pendentes.length ? pendentes : data.questoes).map(q => q.id);
+      sessionStorage.setItem('licaoAtual', JSON.stringify({ licaoId, fila }));
+      window.location.href = `/aluno-desafio?questao=${fila[0]}&licao=${licaoId}`;
+    } catch (e) {
+      alert('Erro ao abrir lição: ' + e.message);
+    }
+  }
+
+  function sair() { sessionStorage.clear(); window.location.href = '/login'; }
   carregar();

@@ -46,6 +46,7 @@ sparkly-ppa/
 ├── app/
 │   ├── __init__.py         # create_app(): fábrica que monta a app (banco, rotas, CLI seed)
 │   ├── config.py           # Configurações centralizadas (SQLite, SECRET_KEY)
+│   ├── gamificacao.py      # Constantes da gamificação (corações, pontos, missões)
 │   ├── models/             # Pacote de modelos (tabelas), um arquivo por domínio
 │   │   ├── __init__.py     # Define o `db` e importa todos os modelos
 │   │   ├── aluno.py        # Aluno
@@ -59,7 +60,8 @@ sparkly-ppa/
 │   │   ├── auth_service.py     # Login de aluno e professor (hash de senha)
 │   │   ├── aluno_service.py    # Dados do aluno, cadastro
 │   │   ├── professor_service.py# Turmas, CRUD de questões, sincronizar instâncias
-│   │   └── questao_service.py  # Interpolação, avaliação de resposta, desempenho
+│   │   ├── questao_service.py  # Interpolação, avaliação de resposta, desempenho, gamificação
+│   │   └── gamificacao_service.py # Missões (XP), ranking e loja (recarga de corações)
 │   ├── routes/             # Blueprints: rotas "finas" (só chamam os serviços)
 │   │   ├── __init__.py     # register_routes(): registra os blueprints
 │   │   ├── paginas.py      # Páginas HTML (sem prefixo)
@@ -69,7 +71,9 @@ sparkly-ppa/
 │   ├── static/
 │   │   ├── sparkly.css     # Folha de estilo base do projeto
 │   │   ├── css/            # CSS por página (extraído dos templates)
-│   │   └── js/             # JS por página (extraído dos templates)
+│   │   └── js/
+│   │       ├── gamificacao.js  # Utilitário compartilhado (badges de corações/pontos na navbar)
+│   │       └── ...             # Demais scripts, um por página
 │   └── templates/          # Templates HTML (sem CSS/JS inline)
 │       ├── tela-inicial.html
 │       ├── cadastro.html
@@ -77,13 +81,17 @@ sparkly-ppa/
 │       ├── aluno-dashboard.html
 │       ├── aluno-trilhas.html
 │       ├── aluno-desafio.html
+│       ├── aluno-missoes.html      # Missões (metas de XP)
+│       ├── aluno-ranking.html      # Ranking geral por pontos
+│       ├── aluno-loja.html         # Loja: recarregar corações com pontos
 │       └── professor-dashboard.html
 └── tests/                  # Suíte pytest dos services
     ├── conftest.py             # Fixtures (app de teste com banco temporário)
     ├── test_questao_service.py
     ├── test_auth_service.py
     ├── test_aluno_service.py
-    └── test_professor_service.py
+    ├── test_professor_service.py
+    └── test_gamificacao_service.py
 ```
 
 ---
@@ -94,7 +102,7 @@ As tabelas são definidas em `app/models/` via SQLAlchemy.
 
 | Tabela | Classe | Campos principais |
 |---|---|---|
-| `aluno` | `Aluno` | `id_aluno`, `nome_completo`, `email` (unique), `usuario` (unique), `senha` (hash) |
+| `aluno` | `Aluno` | `id_aluno`, `nome_completo`, `email` (unique), `usuario` (unique), `senha` (hash), `pontos`, `coracoes` |
 | `professor` | `Professor` | `id_professor`, `nome_completo`, `email`, `usuario`, `senha` (hash) |
 | `materia` | `Materia` | `id_materia`, `nome_materia`, `numero_sala`, `id_professor` (FK) |
 | `licao` | `Licao` | `id_licao`, `tipo`, `descricao`, `nota`, `id_materia` (FK) |
@@ -114,6 +122,44 @@ Quando o professor cria uma questão, o sistema **automaticamente gera uma inst�
 
 ---
 
+## Gamificação (corações, pontos e missões)
+
+Inspirado no modelo de vidas/XP do Duolingo, o Sparkly usa um sistema de **corações** (vidas) e **pontos** (XP) para engajar o aluno. As constantes ficam centralizadas em `app/gamificacao.py`:
+
+| Constante | Valor padrão | Descrição |
+|---|---|---|
+| `MAX_CORACOES` | 5 | Corações máximos que o aluno pode ter |
+| `PONTOS_POR_QUESTAO` | 10 | XP ganho ao acertar uma questão |
+| `PONTOS_PARA_RECARGA` | 10 | Custo em XP para recarregar os corações na loja |
+| `MISSOES` | `[20, 50, 100, 250, 500, 1000]` | Metas de XP exibidas na tela de Missões |
+
+### Regras de corações
+
+A lógica vive em `questao_service.registrar_resposta` e segue o mesmo princípio do Duolingo: uma questão **já concluída** (acertada antes) pode ser **praticada de graça**.
+
+- **Questão nova** (nunca concluída):
+  - Acertar → ganha `PONTOS_POR_QUESTAO` XP.
+  - Errar → perde 1 coração.
+  - Se o aluno estiver com **0 corações**, a resposta é bloqueada (`403`) até recarregar.
+- **Questão em prática** (já concluída antes):
+  - Acertar → ganha XP novamente **e** devolve 1 coração (até o máximo).
+  - Errar → nada acontece (sem perda de coração, sem alteração de nota).
+  - Pode ser respondida mesmo com 0 corações.
+
+`listar_questoes_do_aluno` expõe `ja_concluida` (acertou antes) e `bloqueada` (sem corações e ainda não concluída), usados pelo frontend para exibir o cadeado nas questões novas.
+
+### Telas de gamificação
+
+| Página | Rota | Descrição |
+|---|---|---|
+| Missões | `/aluno-missoes` | Progresso do aluno em relação às metas de XP (`MISSOES`) |
+| Ranking | `/aluno-ranking` | Top alunos por pontos, com destaque para o usuário logado |
+| Loja | `/aluno-loja` | Recarregar corações gastando `PONTOS_PARA_RECARGA` pontos |
+
+Os corações (❤️) e pontos (⭐) do aluno aparecem na navbar de todas as páginas internas, sincronizados via `app/static/js/gamificacao.js`.
+
+---
+
 ## Rotas
 
 ### Páginas (Blueprints: `paginas`)
@@ -126,6 +172,9 @@ Quando o professor cria uma questão, o sistema **automaticamente gera uma inst�
 | `/aluno-dashboard` | Dashboard do aluno |
 | `/aluno-trilhas` | Trilhas/questões do aluno |
 | `/aluno-desafio` | Tela de resolução de questão |
+| `/aluno-missoes` | Missões (metas de XP) |
+| `/aluno-ranking` | Ranking geral por pontos |
+| `/aluno-loja` | Loja (recarregar corações) |
 | `/professor-dashboard` | Painel do professor |
 
 ### API — Aluno (Blueprint `aluno`, prefixo `/api`)
@@ -133,10 +182,13 @@ Quando o professor cria uma questão, o sistema **automaticamente gera uma inst�
 | Método | Rota | Descrição |
 |---|---|---|
 | POST | `/api/login` | Autentica aluno e grava `aluno_id` na sessão |
-| GET | `/api/aluno` | Dados completos do aluno autenticado (desempenho + lições) |
+| GET | `/api/aluno` | Dados completos do aluno autenticado (desempenho + lições + gamificação) |
 | POST | `/api/cadastro` | Cria conta de aluno (valida duplicidade e gera hash de senha) |
-| GET | `/api/aluno/questoes` | Lista questões instanciadas com enunciado interpolado e gabarito oculto |
-| POST | `/api/aluno/questoes/<id>/responder` | Recebe a resposta, avalia e grava no `desempenho` |
+| GET | `/api/aluno/questoes` | Lista questões instanciadas com enunciado interpolado, gabarito oculto e estado de bloqueio |
+| POST | `/api/aluno/questoes/<id>/responder` | Recebe a resposta, avalia, atualiza pontos/corações e grava no `desempenho` |
+| GET | `/api/aluno/missoes` | Lista as missões (metas de XP) com o progresso do aluno |
+| GET | `/api/aluno/ranking` | Top 10 alunos por pontos |
+| POST | `/api/aluno/loja/recarregar` | Gasta pontos para recarregar os corações ao máximo |
 
 ### API — Professor (Blueprint `professor`, prefixo `/api/professor`)
 
@@ -188,11 +240,20 @@ Quando o professor cria uma questão, o sistema **automaticamente gera uma inst�
 
    Sem `.env` o projeto roda com valores de desenvolvimento. O banco SQLite é criado automaticamente em `instance/sparkly.db` ao subir a app (tabelas são criadas via `db.create_all()`).
 
-3. (Opcional) Popule o banco com as questões iniciais de Física:
+3. (Opcional) Popule o banco com as questões iniciais de Física e os usuários padrão de teste:
 
    ```bash
    python init_db.py          # ou: flask seed
    ```
+
+   Isso cria, além do banco de questões, os seguintes usuários de teste (todas as senhas são fixas e servem só para desenvolvimento — **não usar em produção**):
+
+   | Papel | Usuários | Senha |
+   |---|---|---|
+   | Aluno | `anthony_keyvson`, `joao_martins`, `igor_filho`, `daniel_abreu`, `giovane_arlindo`, `caike_luan`, `caio_cavalcante` | `ALUNO123` |
+   | Professor | `villa_lp`, `lazaro_web`, `irlan_fisica`, `juliana_onq`, `kenia_sociologia`, `william_portugues` | `PROFESSOR123` |
+
+   Os e-mails são gerados automaticamente no formato `<usuario>@sparkly.local`.
 
 4. Inicie o servidor:
 

@@ -1,5 +1,20 @@
   const LETRAS = ['A','B','C','D','E','F','G','H'];
   let questoesCache = [];
+  let licoesCache = [];
+  let turmaAtualId = null;
+
+  async function carregarLicoesParaSelects() {
+    try {
+      const r = await fetch('/api/professor/licoes');
+      const data = await r.json();
+      if (!data.sucesso) return;
+      licoesCache = data.licoes;
+      const opts = '<option value="">Sem lição</option>' +
+        licoesCache.map(l => `<option value="${l.id}">${l.turma} · ${l.modulo} · ${l.nome}</option>`).join('');
+      document.getElementById('q-licao').innerHTML = opts;
+      document.getElementById('edit-licao').innerHTML = opts;
+    } catch (e) { /* select fica só com "Sem lição" */ }
+  }
 
   const profSS = JSON.parse(sessionStorage.getItem('professor')||'null');
   if (!profSS) {
@@ -63,9 +78,10 @@
   }
 
   async function verTurma(id) {
+    turmaAtualId = id;
     document.getElementById('turmasGrid').style.display='none';
     document.getElementById('statsRow').style.display='none';
-    document.querySelectorAll('#sec-turmas .page-title, #sec-turmas .page-sub').forEach(el=>el.style.display='none');
+    document.getElementById('turmasToolbar').style.display='none';
     const det = document.getElementById('turmaDetalhe');
     det.innerHTML='<div class="loading"><div class="spinner" style="margin:0 auto 10px;"></div>Carregando detalhes...</div>';
     det.style.display='block';
@@ -82,8 +98,7 @@
 
   function renderDetalhe(data) {
     const det = document.getElementById('turmaDetalhe');
-    const {turma,licoes,alunos} = data;
-    const badgeClass = tipo => ({'aula':'badge-blue','exercicio':'badge-yellow','prova':'badge-red'}[(tipo||'').toLowerCase()]||'badge-neutral');
+    const {turma,modulos,alunos} = data;
     const notaClass  = v => v>=7?'nota-alta':v>=5?'nota-media':'nota-baixa';
     det.innerHTML = `
       <button class="back-btn" onclick="fecharDetalhe()">← Voltar às turmas</button>
@@ -91,18 +106,41 @@
       <div class="page-sub mb-3">Sala ${turma.numero_sala||'—'} · ID ${turma.id}</div>
       <div class="detalhe-grid">
         <div class="panel">
-          <div class="panel-title"><span> Lições</span><span class="badge badge-blue">${licoes.length}</span></div>
-          ${licoes.length===0
-            ? '<div class="empty-state" style="padding:20px"><div class="em-icon"></div><div class="em-text">Nenhuma lição cadastrada</div></div>'
-            : `<table class="table">
-                <thead><tr><th>Tipo</th><th>Descrição</th><th>Nota</th></tr></thead>
-                <tbody>${licoes.map(l=>`
-                  <tr>
-                    <td><span class="badge ${badgeClass(l.tipo)}">${l.tipo}</span></td>
-                    <td>${l.descricao||'—'}</td>
-                    <td style="color:var(--yellow-dk);font-weight:800;">${l.nota!=null?l.nota:'—'}</td>
-                  </tr>`).join('')}
-                </tbody></table>`}
+          <div class="panel-title">
+            <span> Módulos e Lições</span>
+            <button class="btn btn-outline btn-sm" onclick="abrirModalNovoModulo(${turma.id})">+ Módulo</button>
+          </div>
+          ${modulos.length===0
+            ? '<div class="empty-state" style="padding:20px"><div class="em-icon"></div><div class="em-text">Nenhum módulo cadastrado</div></div>'
+            : modulos.map(mo=>`
+                <div class="modulo-bloco">
+                  <div class="modulo-header">
+                    <div class="modulo-nome">${mo.nome}</div>
+                    <div class="modulo-actions">
+                      <button class="btn-icon edit" onclick="abrirModalEditarModulo(${mo.id},'${(mo.nome||'').replace(/'/g,"\\'")}',${JSON.stringify(mo.descricao||'')})" title="Editar módulo">✏️</button>
+                      <button class="btn-icon danger" onclick="deletarModulo(${mo.id},'${(mo.nome||'').replace(/'/g,"\\'")}')" title="Excluir módulo">🗑</button>
+                      <button class="btn btn-outline btn-sm" onclick="abrirModalNovaLicao(${mo.id})">+ Lição</button>
+                    </div>
+                  </div>
+                  ${mo.descricao ? `<div class="modulo-descricao">${mo.descricao}</div>` : ''}
+                  ${mo.licoes.length===0
+                    ? '<div class="empty-state" style="padding:14px"><div class="em-text">Nenhuma lição neste módulo</div></div>'
+                    : `<table class="table">
+                        <thead><tr><th>Lição</th><th>Descrição</th><th>Questões</th><th></th></tr></thead>
+                        <tbody>${mo.licoes.map(li=>`
+                          <tr>
+                            <td>${li.nome}</td>
+                            <td>${li.descricao||'—'}</td>
+                            <td>${li.total_questoes}</td>
+                            <td>
+                              <div class="questao-actions">
+                                <button class="btn-icon edit" onclick="abrirModalEditarLicao(${li.id},'${(li.nome||'').replace(/'/g,"\\'")}',${JSON.stringify(li.descricao||'')})" title="Editar lição">✏️</button>
+                                <button class="btn-icon danger" onclick="deletarLicao(${li.id},'${(li.nome||'').replace(/'/g,"\\'")}')" title="Excluir lição">🗑</button>
+                              </div>
+                            </td>
+                          </tr>`).join('')}
+                        </tbody></table>`}
+                </div>`).join('')}
         </div>
         <div class="panel">
           <div class="panel-title"><span>👥 Alunos</span><span class="badge badge-green">${alunos.length}</span></div>
@@ -122,11 +160,129 @@
   }
 
   function fecharDetalhe() {
+    turmaAtualId = null;
     document.getElementById('turmaDetalhe').style.display='none';
     document.getElementById('turmasGrid').style.display='grid';
     document.getElementById('statsRow').style.display='grid';
-    document.querySelectorAll('#sec-turmas .page-title, #sec-turmas .page-sub').forEach(el=>el.style.display='');
+    document.getElementById('turmasToolbar').style.display='flex';
     carregarTurmas();
+  }
+
+  // ── Turmas ─────────────────────────────────────────────────────────
+
+  function abrirModalNovaTurma() {
+    document.getElementById('turma-nome').value='';
+    document.getElementById('turma-sala').value='';
+    document.getElementById('modalTurma').classList.add('active');
+  }
+  function fecharModalTurma() { document.getElementById('modalTurma').classList.remove('active'); }
+
+  async function salvarTurma() {
+    const nome = document.getElementById('turma-nome').value.trim();
+    const numero_sala = document.getElementById('turma-sala').value.trim();
+    if(!nome){toast('Informe o nome da turma','error');return;}
+    try {
+      const r = await fetch('/api/professor/turmas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,numero_sala})});
+      const data = await r.json();
+      if(!data.sucesso) throw new Error(data.erro||JSON.stringify(data));
+      toast('Turma criada! ✓'); fecharModalTurma(); carregarTurmas();
+    } catch(e) { toast('Erro: '+e.message,'error'); }
+  }
+
+  // ── Módulos ────────────────────────────────────────────────────────
+
+  function abrirModalNovoModulo(materiaId) {
+    document.getElementById('modulo-modal-titulo').textContent='Novo Módulo';
+    document.getElementById('modulo-id').value='';
+    document.getElementById('modulo-materia-id').value=materiaId;
+    document.getElementById('modulo-nome').value='';
+    document.getElementById('modulo-descricao').value='';
+    document.getElementById('modalModulo').classList.add('active');
+  }
+  function abrirModalEditarModulo(id, nome, descricao) {
+    document.getElementById('modulo-modal-titulo').textContent='Editar Módulo';
+    document.getElementById('modulo-id').value=id;
+    document.getElementById('modulo-materia-id').value='';
+    document.getElementById('modulo-nome').value=nome;
+    document.getElementById('modulo-descricao').value=descricao||'';
+    document.getElementById('modalModulo').classList.add('active');
+  }
+  function fecharModalModulo() { document.getElementById('modalModulo').classList.remove('active'); }
+
+  async function salvarModulo() {
+    const id = document.getElementById('modulo-id').value;
+    const materiaId = document.getElementById('modulo-materia-id').value;
+    const nome = document.getElementById('modulo-nome').value.trim();
+    const descricao = document.getElementById('modulo-descricao').value.trim();
+    if(!nome){toast('Informe o nome do módulo','error');return;}
+    try {
+      const url = id ? `/api/professor/modulos/${id}` : `/api/professor/turmas/${materiaId}/modulos`;
+      const r = await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,descricao})});
+      const data = await r.json();
+      if(!data.sucesso) throw new Error(data.erro||JSON.stringify(data));
+      toast(id?'Módulo atualizado! ✓':'Módulo criado! ✓'); fecharModalModulo();
+      if(turmaAtualId) verTurma(turmaAtualId);
+    } catch(e) { toast('Erro: '+e.message,'error'); }
+  }
+
+  async function deletarModulo(id, nome) {
+    if(!confirm(`Excluir o módulo "${nome}"? As lições dentro dele também serão excluídas.`)) return;
+    try {
+      const r = await fetch(`/api/professor/modulos/${id}`,{method:'DELETE'});
+      const data = await r.json();
+      if(!data.sucesso) throw new Error(data.erro);
+      toast('Módulo excluído! ✓');
+      if(turmaAtualId) verTurma(turmaAtualId);
+    } catch(e) { toast('Erro: '+e.message,'error'); }
+  }
+
+  // ── Lições ─────────────────────────────────────────────────────────
+
+  function abrirModalNovaLicao(moduloId) {
+    document.getElementById('licao-modal-titulo').textContent='Nova Lição';
+    document.getElementById('licao-id').value='';
+    document.getElementById('licao-modulo-id').value=moduloId;
+    document.getElementById('licao-nome').value='';
+    document.getElementById('licao-descricao').value='';
+    document.getElementById('modalLicao').classList.add('active');
+  }
+  function abrirModalEditarLicao(id, nome, descricao) {
+    document.getElementById('licao-modal-titulo').textContent='Editar Lição';
+    document.getElementById('licao-id').value=id;
+    document.getElementById('licao-modulo-id').value='';
+    document.getElementById('licao-nome').value=nome;
+    document.getElementById('licao-descricao').value=descricao||'';
+    document.getElementById('modalLicao').classList.add('active');
+  }
+  function fecharModalLicao() { document.getElementById('modalLicao').classList.remove('active'); }
+
+  async function salvarLicao() {
+    const id = document.getElementById('licao-id').value;
+    const moduloId = document.getElementById('licao-modulo-id').value;
+    const nome = document.getElementById('licao-nome').value.trim();
+    const descricao = document.getElementById('licao-descricao').value.trim();
+    if(!nome){toast('Informe o nome da lição','error');return;}
+    try {
+      const url = id ? `/api/professor/licoes/${id}` : `/api/professor/modulos/${moduloId}/licoes`;
+      const r = await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,descricao})});
+      const data = await r.json();
+      if(!data.sucesso) throw new Error(data.erro||JSON.stringify(data));
+      toast(id?'Lição atualizada! ✓':'Lição criada! ✓'); fecharModalLicao();
+      if(turmaAtualId) verTurma(turmaAtualId);
+      carregarLicoesParaSelects();
+    } catch(e) { toast('Erro: '+e.message,'error'); }
+  }
+
+  async function deletarLicao(id, nome) {
+    if(!confirm(`Excluir a lição "${nome}"?`)) return;
+    try {
+      const r = await fetch(`/api/professor/licoes/${id}`,{method:'DELETE'});
+      const data = await r.json();
+      if(!data.sucesso) throw new Error(data.erro);
+      toast('Lição excluída! ✓');
+      if(turmaAtualId) verTurma(turmaAtualId);
+      carregarLicoesParaSelects();
+    } catch(e) { toast('Erro: '+e.message,'error'); }
   }
 
   async function carregarQuestoes() {
@@ -194,6 +350,7 @@
   }
 
   function abrirModalNovaQuestao() {
+    carregarLicoesParaSelects();
     document.getElementById('q-nome').value='';
     document.getElementById('q-enunciado').value='';
     document.getElementById('q-gabarito').value='';
@@ -250,8 +407,9 @@
     } else {
       conteudo.gabarito=document.getElementById('q-gabarito').value.trim();
     }
+    const id_licao = document.getElementById('q-licao').value || null;
     try {
-      const r = await fetch('/api/professor/questoes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,tipo,conteudo})});
+      const r = await fetch('/api/professor/questoes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,tipo,conteudo,id_licao})});
       const data = await r.json();
       if(!data.sucesso) throw new Error(data.erro||JSON.stringify(data));
       toast('Questão criada! ✓'); fecharModal(); carregarQuestoes();
@@ -268,6 +426,7 @@
   }
 
   function editarQuestao(id) {
+    carregarLicoesParaSelects();
     const q = questoesCache.find(x=>x.id===id); if(!q) return;
     document.getElementById('edit-id').value=q.id;
     document.getElementById('edit-nome').value=q.nome;
@@ -325,8 +484,9 @@
     } else {
       conteudo.gabarito=document.getElementById('edit-gabarito').value.trim();
     }
+    const id_licao = document.getElementById('edit-licao').value || null;
     try {
-      const r=await fetch(`/api/professor/questoes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,tipo,conteudo})});
+      const r=await fetch(`/api/professor/questoes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,tipo,conteudo,id_licao})});
       const data=await r.json();
       if(!data.sucesso) throw new Error(data.erro||JSON.stringify(data));
       toast('Questão atualizada! ✓'); fecharEditarQuestao(); carregarQuestoes();
@@ -340,3 +500,4 @@
   }
 
   carregarTurmas();
+  carregarLicoesParaSelects();

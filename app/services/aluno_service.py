@@ -22,7 +22,7 @@ def obter_dados_aluno(aluno_id):
             'total_atividades': len(desempenhos)
         },
         'licoes': [
-            {'id': l.id_licao, 'tipo': l.tipo, 'descricao': l.descricao}
+            {'id': l.id_licao, 'nome': l.nome, 'descricao': l.descricao}
             for l in licoes
         ]
     }
