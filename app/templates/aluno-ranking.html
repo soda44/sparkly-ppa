@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sparkly — Questões</title>
+  <title>Sparkly — Ranking</title>
   <link rel="stylesheet" href="/static/sparkly.css">
-  <link rel="stylesheet" href="/static/css/aluno-trilhas.css">
+  <link rel="stylesheet" href="/static/css/aluno-ranking.css">
 </head>
 <body>
 
@@ -13,9 +13,9 @@
   <div class="logo">Sparkly<span class="dot">.</span></div>
   <div class="nav-center">
     <a href="/aluno-dashboard" class="nav-link">Início</a>
-    <a href="/aluno-trilhas" class="nav-link active">Questões</a>
+    <a href="/aluno-trilhas" class="nav-link">Questões</a>
     <a href="/aluno-missoes" class="nav-link">Missões</a>
-    <a href="/aluno-ranking" class="nav-link">Ranking</a>
+    <a href="/aluno-ranking" class="nav-link active">Ranking</a>
     <a href="/aluno-loja" class="nav-link">Loja</a>
   </div>
   <div class="d-flex align-center gap-2">
@@ -30,18 +30,17 @@
 </nav>
 
 <main>
-  <div class="mb-3">
-    <div class="page-title">Trilha de Física</div>
-    <div class="page-sub">Complete as lições em ordem para avançar nos módulos</div>
+  <div class="ranking-header">
+    <div class="ranking-icone">🏆</div>
+    <div class="page-title">Ranking</div>
+    <div class="page-sub">Veja como você está se saindo entre os outros alunos</div>
   </div>
 
-  <div class="trilha" id="trilha">
-    <div class="empty" style="grid-column:1/-1">
-      <div class="spinner" style="margin:0 auto;"></div>
-    </div>
+  <div class="card ranking-card" id="rankingList">
+    <div class="empty-state"><div class="spinner" style="margin:0 auto;"></div></div>
   </div>
 </main>
   <script src="/static/js/gamificacao.js"></script>
-  <script src="/static/js/aluno-trilhas.js"></script>
+  <script src="/static/js/aluno-ranking.js"></script>
 </body>
 </html>

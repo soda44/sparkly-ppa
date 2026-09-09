@@ -1,5 +1,33 @@
-from app.models import db, ModeloQuestao, QuestaoInstanciada
+from app.models import db, ModeloQuestao, QuestaoInstanciada, Materia, Aluno, Professor
 from app.services import professor_service
+from app.seed import seed_usuarios_padrao, ALUNOS_PADRAO, PROFESSORES_PADRAO
+
+
+def test_seed_usuarios_padrao_cria_todos(ctx):
+    alunos_criados, professores_criados = seed_usuarios_padrao()
+    assert alunos_criados == len(ALUNOS_PADRAO)
+    assert professores_criados == len(PROFESSORES_PADRAO)
+    assert Aluno.query.count() == len(ALUNOS_PADRAO)
+    assert Professor.query.count() == len(PROFESSORES_PADRAO)
+
+
+def test_seed_usuarios_padrao_eh_idempotente(ctx):
+    seed_usuarios_padrao()
+    alunos_criados, professores_criados = seed_usuarios_padrao()
+    assert alunos_criados == 0 and professores_criados == 0
+
+
+def test_criar_turma(ctx):
+    materia, erro, codigo = professor_service.criar_turma(1, 'Física I', '203')
+    assert erro is None and codigo == 201
+    assert materia.nome_materia == 'Física I'
+    assert materia.numero_sala == '203'
+    assert materia.id_professor == 1
+
+
+def test_criar_turma_sem_nome(ctx):
+    materia, erro, codigo = professor_service.criar_turma(1, '   ')
+    assert materia is None and codigo == 400
 
 
 def test_criar_questao_cria_instancia(ctx):

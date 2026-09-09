@@ -1,4 +1,5 @@
 from app.models import db
+from app.gamificacao import MAX_CORACOES
 
 
 class Aluno(db.Model):
@@ -12,6 +13,13 @@ class Aluno(db.Model):
     usuario = db.Column(db.String(50), unique=True, nullable=False)
     senha = db.Column(db.String(255), nullable=False)
 
+    # Gamificação: pontos (XP) acumulados e corações (vidas) disponíveis.
+    pontos = db.Column(db.Integer, nullable=False, default=0)
+    coracoes = db.Column(db.Integer, nullable=False, default=MAX_CORACOES)
+
+    # Sparks (⚡): moeda gastável na loja, ganha ao acertar questões.
+    sparks = db.Column(db.Integer, nullable=False, default=0)
+
     def __repr__(self):
         return f'<Aluno {self.usuario}>'
 
@@ -22,5 +30,9 @@ class Aluno(db.Model):
             'email': self.email,
             'usuario': self.usuario,
             'nomeSocial': self.nome_social,
-            'genero': self.genero
+            'genero': self.genero,
+            'pontos': self.pontos,
+            'coracoes': self.coracoes,
+            'coracoesMax': MAX_CORACOES,
+            'sparks': self.sparks,
         }

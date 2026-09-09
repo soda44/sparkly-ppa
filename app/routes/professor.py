@@ -43,6 +43,20 @@ def turmas():
     return jsonify({'sucesso': True, 'turmas': professor_service.listar_turmas(_autenticar())}), 200
 
 
+@professor_bp.route('/turmas', methods=['POST'])
+def criar_turma():
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    dados = request.get_json() or {}
+    materia, erro, codigo = professor_service.criar_turma(
+        _autenticar(), dados.get('nome'), dados.get('numero_sala'))
+    if erro:
+        return jsonify({'sucesso': False, 'erro': erro}), codigo
+
+    return jsonify({'sucesso': True, 'turma': materia.to_dict()}), codigo
+
+
 @professor_bp.route('/turmas/<int:materia_id>', methods=['GET'])
 def turma_detalhe(materia_id):
     if not _autenticar():
@@ -53,6 +67,92 @@ def turma_detalhe(materia_id):
         return jsonify({'sucesso': False, 'erro': 'Turma não encontrada'}), 404
 
     return jsonify({'sucesso': True, **dados}), 200
+
+
+@professor_bp.route('/turmas/<int:materia_id>/modulos', methods=['POST'])
+def criar_modulo(materia_id):
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    dados = request.get_json() or {}
+    modulo, erro, codigo = professor_service.criar_modulo(
+        materia_id, _autenticar(), dados.get('nome'), dados.get('descricao'))
+    if erro:
+        return jsonify({'sucesso': False, 'erro': erro}), codigo
+
+    return jsonify({'sucesso': True, 'modulo': modulo.to_dict()}), codigo
+
+
+@professor_bp.route('/modulos/<int:modulo_id>', methods=['PUT'])
+def editar_modulo(modulo_id):
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    dados = request.get_json() or {}
+    modulo, erro, codigo = professor_service.editar_modulo(modulo_id, _autenticar(), dados)
+    if erro:
+        return jsonify({'sucesso': False, 'erro': erro}), codigo
+
+    return jsonify({'sucesso': True, 'modulo': modulo.to_dict()}), codigo
+
+
+@professor_bp.route('/modulos/<int:modulo_id>', methods=['DELETE'])
+def deletar_modulo(modulo_id):
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    resultado, erro, codigo = professor_service.deletar_modulo(modulo_id, _autenticar())
+    if erro:
+        return jsonify({'sucesso': False, 'erro': erro}), codigo
+
+    return jsonify({'sucesso': True}), codigo
+
+
+@professor_bp.route('/modulos/<int:modulo_id>/licoes', methods=['POST'])
+def criar_licao(modulo_id):
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    dados = request.get_json() or {}
+    licao, erro, codigo = professor_service.criar_licao(
+        modulo_id, _autenticar(), dados.get('nome'), dados.get('descricao'))
+    if erro:
+        return jsonify({'sucesso': False, 'erro': erro}), codigo
+
+    return jsonify({'sucesso': True, 'licao': licao.to_dict()}), codigo
+
+
+@professor_bp.route('/licoes', methods=['GET'])
+def listar_licoes():
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    return jsonify({'sucesso': True, 'licoes': professor_service.listar_licoes_do_professor(_autenticar())}), 200
+
+
+@professor_bp.route('/licoes/<int:licao_id>', methods=['PUT'])
+def editar_licao(licao_id):
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    dados = request.get_json() or {}
+    licao, erro, codigo = professor_service.editar_licao(licao_id, _autenticar(), dados)
+    if erro:
+        return jsonify({'sucesso': False, 'erro': erro}), codigo
+
+    return jsonify({'sucesso': True, 'licao': licao.to_dict()}), codigo
+
+
+@professor_bp.route('/licoes/<int:licao_id>', methods=['DELETE'])
+def deletar_licao(licao_id):
+    if not _autenticar():
+        return jsonify({'sucesso': False, 'erro': 'Não autenticado'}), 401
+
+    resultado, erro, codigo = professor_service.deletar_licao(licao_id, _autenticar())
+    if erro:
+        return jsonify({'sucesso': False, 'erro': erro}), codigo
+
+    return jsonify({'sucesso': True}), codigo
 
 
 @professor_bp.route('/questoes', methods=['GET'])
@@ -71,7 +171,8 @@ def criar_questao():
     if not dados or not dados.get('nome') or not dados.get('tipo') or not dados.get('conteudo'):
         return jsonify({'sucesso': False, 'erro': 'Campos obrigatórios: nome, tipo, conteudo'}), 400
 
-    questao, erro, codigo = professor_service.criar_questao(dados['nome'], dados['tipo'], dados['conteudo'])
+    questao, erro, codigo = professor_service.criar_questao(
+        dados['nome'], dados['tipo'], dados['conteudo'], dados.get('id_licao'))
     if erro:
         return jsonify({'sucesso': False, 'erro': erro}), codigo
 

@@ -12,17 +12,37 @@
 
   const params = new URLSearchParams(window.location.search);
   const questaoId = parseInt(params.get('questao'));
+  const licaoId = params.get('licao') ? parseInt(params.get('licao')) : null;
   if (!questaoId) window.location.href='/aluno-trilhas';
 
   let questaoAtual = null, respostaSelecionada = null, jaConfirmou = false;
 
+  function proximaQuestaoDaFila() {
+    if (!licaoId) return null;
+    try {
+      const estado = JSON.parse(sessionStorage.getItem('licaoAtual') || 'null');
+      if (!estado || estado.licaoId !== licaoId) return null;
+      const idx = estado.fila.indexOf(questaoId);
+      if (idx === -1 || idx === estado.fila.length - 1) return null;
+      return estado.fila[idx + 1];
+    } catch (e) { return null; }
+  }
+
   async function carregarQuestao() {
     try {
-      const r = await fetch('/api/aluno/questoes');
+      const url = licaoId ? `/api/aluno/licoes/${licaoId}/questoes` : '/api/aluno/questoes';
+      const r = await fetch(url);
       const data = await r.json();
       if (!data.sucesso) throw new Error(data.erro);
-      questaoAtual = data.questoes.find(q => q.id === questaoId);
+      const lista = licaoId ? data.questoes : data.questoes;
+      questaoAtual = lista.find(q => q.id === questaoId);
       if (!questaoAtual) throw new Error('Questão não encontrada');
+
+      if (questaoAtual.bloqueada) {
+        document.getElementById('telaLoading').style.display = 'none';
+        document.getElementById('telaBloqueada').style.display = 'flex';
+        return;
+      }
       renderQuestao();
     } catch(e) {
       document.getElementById('telaLoading').innerHTML =
@@ -87,7 +107,21 @@
         body: JSON.stringify({ resposta })
       });
       const data = await r.json();
-      if (!data.sucesso) throw new Error(data.erro);
+      if (!data.sucesso) {
+        if (r.status === 403) {
+          document.getElementById('telaQuestao').style.display = 'none';
+          document.getElementById('telaBloqueada').style.display = 'flex';
+          return;
+        }
+        throw new Error(data.erro);
+      }
+      if (typeof data.pontos_totais === 'number' || typeof data.sparks_totais === 'number' || typeof data.coracoes === 'number') {
+        const campos = {};
+        if (typeof data.pontos_totais === 'number') campos.pontos = data.pontos_totais;
+        if (typeof data.sparks_totais === 'number') campos.sparks = data.sparks_totais;
+        if (typeof data.coracoes === 'number') campos.coracoes = data.coracoes;
+        salvarGamificacaoNaSessao(campos);
+      }
       mostrarFeedback(data);
       setTimeout(() => mostrarResultado(data), 2200);
     } catch(e) {
@@ -134,6 +168,33 @@
     fill.style.background = data.correto ? 'var(--green)' : 'var(--red)';
     setTimeout(() => fill.style.width = (data.correto?'100%':'30%'), 100);
     document.getElementById('resBarraLabel').textContent = data.correto ? 'Nota: 10.0' : 'Nota: 0.0';
+
+    const gami = document.getElementById('resGamificacao');
+    const partes = [];
+    if (data.pontos_ganhos) partes.push(`<span class="ganho-pontos">⭐ +${data.pontos_ganhos} XP</span>`);
+    if (data.sparks_ganhos) partes.push(`<span class="ganho-sparks">⚡ +${data.sparks_ganhos} Sparks</span>`);
+    if (data.correto && data.em_pratica) partes.push(`<span class="ganho-coracao">❤️ +1 coração</span>`);
+    else if (!data.correto && !data.em_pratica) partes.push(`<span class="perda-coracao">💔 -1 coração</span>`);
+    if (data.pet_subiu_nivel && data.pet_nivel) {
+      partes.push(`<span class="ganho-nivel-pet">🐾 Seu pet subiu para o nível ${data.pet_nivel.nivel}!</span>`);
+    }
+    gami.innerHTML = partes.join('');
+
+    const proximaId = proximaQuestaoDaFila();
+    const acoes = document.querySelector('#telaResultado .resultado-acoes');
+    if (proximaId) {
+      acoes.innerHTML = `
+        <button class="btn btn-primary btn-full btn-lg" onclick="irParaProximaQuestao(${proximaId})">Próxima questão →</button>
+        <a href="/aluno-trilhas" class="btn btn-outline btn-full">Sair da lição</a>`;
+    } else if (licaoId) {
+      acoes.innerHTML = `
+        <a href="/aluno-trilhas" class="btn btn-primary btn-full btn-lg">🎉 Lição concluída! Ver trilha</a>
+        <a href="/aluno-dashboard" class="btn btn-outline btn-full">Dashboard</a>`;
+    }
+  }
+
+  function irParaProximaQuestao(id) {
+    window.location.href = `/aluno-desafio?questao=${id}&licao=${licaoId}`;
   }
 
   document.getElementById('respostaLivre').addEventListener('input', function() {

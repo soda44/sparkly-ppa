@@ -16,6 +16,9 @@
       document.getElementById('statMedia').textContent      = d.desempenho.media_notas.toFixed(1);
       document.getElementById('statTotal').textContent      = d.desempenho.total_atividades;
 
+      salvarGamificacaoNaSessao(d.aluno);
+      carregarMissaoDestaque();
+
       const lista = document.getElementById('licoesList');
       if (!d.licoes || d.licoes.length === 0) {
         lista.innerHTML = `<div class="empty-state"><div class="em-text">Nenhuma lição disponível ainda</div></div>`;
@@ -34,6 +37,37 @@
     }
   }
   carregarDados();
+
+  async function carregarMeuPet() {
+    try {
+      const r = await fetch('/api/aluno/pet');
+      const data = await r.json();
+      if (!data.sucesso) return;
+      const corInfo = data.cores.find(c => c.chave === data.pet.corAtual);
+      document.getElementById('meuPetBicho').style.setProperty('--pet-cor', corInfo ? corInfo.hex : '#FFC800');
+      document.getElementById('meuPetNome').textContent = data.pet.nome;
+      if (data.pet.nivel) {
+        document.getElementById('meuPetNivel').textContent = `Nível ${data.pet.nivel.nivel}`;
+      }
+    } catch (e) { /* silencioso: widget opcional */ }
+  }
+  carregarMeuPet();
+
+  async function carregarMissaoDestaque() {
+    try {
+      const r = await fetch('/api/aluno/missoes');
+      const data = await r.json();
+      if (!data.sucesso) return;
+      const proxima = data.missoes.find(m => !m.concluida) || data.missoes[data.missoes.length - 1];
+      document.getElementById('missaoTitulo').textContent =
+        `${proxima.titulo} (${proxima.pontos_atuais}/${proxima.meta} XP)`;
+      setTimeout(() => {
+        document.getElementById('missaoBarra').style.width = proxima.progresso + '%';
+      }, 100);
+    } catch(e) {
+      document.getElementById('missaoTitulo').textContent = 'Não foi possível carregar sua missão';
+    }
+  }
 
   async function sair() {
     try { await fetch('/api/logout', {method:'POST'}); } catch(e) {}

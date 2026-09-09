@@ -29,6 +29,7 @@ class QuestaoInstanciada(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     modelo_id = db.Column(db.Integer, db.ForeignKey('modelo_questao.id'))
     valores_variaveis = db.Column(db.JSON)
+    id_licao = db.Column(db.Integer, db.ForeignKey('licao.id_licao'))
 
     def __repr__(self):
         return f'<QuestaoInstanciada {self.id}>'
@@ -37,5 +38,6 @@ class QuestaoInstanciada(db.Model):
         return {
             'id': self.id,
             'modelo_id': self.modelo_id,
-            'valores_variaveis': self.valores_variaveis
+            'valores_variaveis': self.valores_variaveis,
+            'id_licao': self.id_licao,
         }

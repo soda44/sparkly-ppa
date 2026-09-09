@@ -37,9 +37,12 @@
 
     <!-- TURMAS -->
     <div class="section active" id="sec-turmas">
-      <div class="mb-3">
-        <div class="page-title">Minhas Turmas 📚</div>
-        <div class="page-sub">Turmas vinculadas à sua conta</div>
+      <div class="questoes-toolbar mb-3" id="turmasToolbar">
+        <div>
+          <div class="page-title">Minhas Turmas 📚</div>
+          <div class="page-sub">Turmas vinculadas à sua conta</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="abrirModalNovaTurma()">+ Nova Turma</button>
       </div>
 
       <div class="stats-row" id="statsRow">
@@ -88,6 +91,12 @@
         <option value="multipla-escolha">Múltipla Escolha</option>
         <option value="multi-selecao">Múltipla Seleção</option>
         <option value="entrada-texto">Dissertativa / Texto</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lição <span style="color:var(--muted);font-weight:600;">(opcional — a questão só aparece para o aluno se estiver em uma lição)</span></label>
+      <select class="form-select" id="q-licao">
+        <option value="">Sem lição</option>
       </select>
     </div>
     <div class="form-group">
@@ -140,6 +149,12 @@
       </select>
     </div>
     <div class="form-group">
+      <label class="form-label">Lição</label>
+      <select class="form-select" id="edit-licao">
+        <option value="">Sem lição</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label class="form-label">Enunciado</label>
       <textarea class="form-textarea" id="edit-enunciado"></textarea>
     </div>
@@ -155,6 +170,67 @@
     <div class="modal-footer">
       <button class="btn-cancel" onclick="fecharEditarQuestao()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarEdicao()"> Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVA TURMA -->
+<div class="modal-overlay" id="modalTurma">
+  <div class="modal">
+    <div class="modal-title">Nova Turma</div>
+    <div class="form-group">
+      <label class="form-label">Nome da turma</label>
+      <input type="text" class="form-input" id="turma-nome" placeholder="Ex: Física I — 2º ano">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Número da sala <span style="color:var(--muted);font-weight:600;">(opcional)</span></label>
+      <input type="text" class="form-input" id="turma-sala" placeholder="Ex: 12">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModalTurma()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTurma()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MÓDULO (criar/editar) -->
+<div class="modal-overlay" id="modalModulo">
+  <div class="modal">
+    <div class="modal-title" id="modulo-modal-titulo">Novo Módulo</div>
+    <input type="hidden" id="modulo-id">
+    <input type="hidden" id="modulo-materia-id">
+    <div class="form-group">
+      <label class="form-label">Nome do módulo</label>
+      <input type="text" class="form-input" id="modulo-nome" placeholder="Ex: Cinemática">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição <span style="color:var(--muted);font-weight:600;">(opcional)</span></label>
+      <textarea class="form-textarea" id="modulo-descricao" placeholder="Descreva o módulo..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModalModulo()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarModulo()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: LIÇÃO (criar/editar) -->
+<div class="modal-overlay" id="modalLicao">
+  <div class="modal">
+    <div class="modal-title" id="licao-modal-titulo">Nova Lição</div>
+    <input type="hidden" id="licao-id">
+    <input type="hidden" id="licao-modulo-id">
+    <div class="form-group">
+      <label class="form-label">Nome da lição</label>
+      <input type="text" class="form-input" id="licao-nome" placeholder="Ex: Movimento Uniforme">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição <span style="color:var(--muted);font-weight:600;">(opcional)</span></label>
+      <textarea class="form-textarea" id="licao-descricao" placeholder="Descreva a lição..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModalLicao()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLicao()">Salvar</button>
     </div>
   </div>
 </div>

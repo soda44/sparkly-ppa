@@ -11,12 +11,29 @@
 
 <nav class="navbar">
   <div class="logo">Sparkly<span class="dot">.</span></div>
+  <div class="gami-nav">
+    <span class="gami-badge gami-coracoes" id="navCoracoes">❤️ —</span>
+    <span class="gami-badge gami-pontos" id="navPontos">⭐ —</span>
+    <span class="gami-badge gami-sparks" id="navSparks">⚡ —</span>
+  </div>
   <a href="/aluno-trilhas" class="btn btn-outline btn-sm">← Voltar</a>
 </nav>
 
 <div id="telaLoading">
   <div class="spinner"></div>
   <span>Carregando questão...</span>
+</div>
+
+<div id="telaBloqueada" style="display:none;">
+  <div class="bloqueio-wrap">
+    <div class="bloqueio-icone">💔</div>
+    <div class="bloqueio-titulo">Você está sem corações</div>
+    <p class="bloqueio-texto">Aguarde a recarga automática ou visite a loja para recarregar agora usando seus pontos.</p>
+    <div class="bloqueio-acoes">
+      <a href="/aluno-loja" class="btn btn-primary btn-lg btn-full">Ir para a loja</a>
+      <a href="/aluno-trilhas" class="btn btn-outline btn-full">Praticar uma questão já concluída</a>
+    </div>
+  </div>
 </div>
 
 <div id="telaQuestao" style="display:flex;">
@@ -54,12 +71,14 @@
       <div class="resultado-barra-fill" id="resBarraFill"></div>
     </div>
     <div class="resultado-barra-label" id="resBarraLabel"></div>
+    <div class="resultado-gamificacao" id="resGamificacao"></div>
     <div class="resultado-acoes">
       <a href="/aluno-trilhas"   class="btn btn-primary btn-full btn-lg">Ver todas as questões</a>
       <a href="/aluno-dashboard" class="btn btn-outline btn-full">Dashboard</a>
     </div>
   </div>
 </div>
+  <script src="/static/js/gamificacao.js"></script>
   <script src="/static/js/aluno-desafio.js"></script>
 </body>
 </html>
